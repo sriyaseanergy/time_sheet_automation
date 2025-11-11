@@ -1,0 +1,5 @@
+{
+    "name": "timesheet-agent",
+    "version": "1.0.0",
+    "description": "Rephrases Toggl tasks and updates them to the internal API."
+}
