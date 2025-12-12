@@ -18,3 +18,12 @@ class Tasktype(TimesheetBaseEnum):
     @property
     def task_type(self):
         return self.value
+
+
+class Functionality(TimesheetBaseEnum):
+    Order_entry = 215191148
+    Invoice = 215191154
+
+    @property
+    def functionality(self):
+        return self.value

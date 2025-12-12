@@ -17,6 +17,6 @@ def push_to_timesheet_api(entry):
         "projectUID": entry.projectUID,
     }
 
-    response = requests.post(settings.time_sheet_url, json=payload, timeout=10)
+    response = requests.put(settings.time_sheet_url, json=payload, timeout=10)
 
     return response.status_code, response.text

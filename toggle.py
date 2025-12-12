@@ -2,7 +2,7 @@ import requests
 from config import settings
 from datetime import datetime, timedelta
 from dataclasses import dataclass
-from constants import Tasktype
+from constants import Tasktype, Functionality
 
 API_TOKEN = settings.toggle_api
 
@@ -12,7 +12,7 @@ print(yesterday)
 
 
 def fetch_toggl_tasks(api_token: str):
-    url = "https://api.track.toggl.com/api/v9/me/time_entries?start_date=2025-12-09&end_date=2025-12-10"
+    url = "https://api.track.toggl.com/api/v9/me/time_entries?start_date=2025-12-12&end_date=2025-12-13"
     resp = requests.get(url, auth=(api_token, "api_token"))
     resp.raise_for_status()
     result = resp.json()
@@ -43,6 +43,18 @@ def detect_task_type(description: str) -> int:
     return Tasktype.Development_Maintanace.value
 
 
+def map_functionality_from_enum(project_id):
+    if project_id == Functionality.Order_entry.value:
+        functionality = "Order entry"
+        return functionality
+    elif project_id == Functionality.Invoice.value:
+        functionality = "Invoice"
+        return functionality
+    else:
+        # raise ValueError(f"Unknown project_id: {project_id}")
+        return "Unkonwn"
+
+
 def to_hhmm(seconds: int) -> str:
     hours = seconds // 3600
     minutes = (seconds % 3600) // 60
@@ -51,7 +63,7 @@ def to_hhmm(seconds: int) -> str:
 
 def extract_date(start_timestamp: str) -> str:
     dt = datetime.fromisoformat(start_timestamp.replace("Z", "+00:00"))
-    return dt.strftime("%Y-%m-%d")
+    return dt.strftime("hh:mm")
 
 
 def create_response_body_from_toggl_taks(results):
@@ -61,12 +73,13 @@ def create_response_body_from_toggl_taks(results):
         description = entry.get("description", "")
         duration_seconds = entry.get("duration", 0)
         start = entry.get("start")
+        project_id = map_functionality_from_enum(entry.get("project_id", ""))
 
         payload = Apiparameters(
             empid=settings.emp_id,
             date=extract_date(start),
             tasktype=detect_task_type(description),
-            functionality=description,
+            functionality=project_id,
             task=description,
             timespent=to_hhmm(duration_seconds),
             projectUID=settings.project_id,
@@ -81,8 +94,8 @@ def create_response_body_from_toggl_taks(results):
 class Apiparameters:
     empid: int = 0
     date: str = ""
-    tasktype: str = ""
+    tasktype: int = ""
     functionality: str = ""
     task: str = ""
     timespent: str = ""
-    projectUID: str = ""
+    projectUID: int = ""

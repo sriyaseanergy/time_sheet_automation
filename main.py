@@ -9,6 +9,7 @@ def run_timesheet_sync():
     formatted_entries = create_response_body_from_toggl_taks(raw_entries)
 
     edited_entries = show_edit_popup(formatted_entries)
+    print(edited_entries)
 
     if not edited_entries:
         print("Cancelled. No API calls made.")
