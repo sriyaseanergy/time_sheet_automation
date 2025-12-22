@@ -11,16 +11,26 @@ yesterday = date - timedelta(days=1)
 print(yesterday)
 
 
-def fetch_toggl_tasks(api_token: str):
-    url = "https://api.track.toggl.com/api/v9/me/time_entries?start_date=2025-12-12&end_date=2025-12-13"
-    resp = requests.get(url, auth=(api_token, "api_token"))
-    resp.raise_for_status()
+def fetch_toggl_tasks(api_token=API_TOKEN):
+    url = "https://api.track.toggl.com/api/v9/me/time_entries"
+    params = {
+        "start_date": "2025-12-17",
+        "end_date": "2025-12-18",
+    }
+
+    resp = requests.get(
+        url,
+        params=params,
+        auth=(api_token, "api_token"),  # <-- important
+        timeout=10,
+    )
+
+    if not resp.ok:
+        print("Toggl error:", resp.status_code, resp.text)
+        resp.raise_for_status()
+
     result = resp.json()
-    print(result)
     return result
-
-
-fetch_toggl_tasks(api_token=API_TOKEN)
 
 
 def detect_task_type(description: str) -> int:
@@ -61,9 +71,13 @@ def to_hhmm(seconds: int) -> str:
     return f"{hours:02d}:{minutes:02d}"
 
 
+def to_decimal_hours(seconds: int) -> float:
+    return round(seconds / 3600, 2)
+
+
 def extract_date(start_timestamp: str) -> str:
     dt = datetime.fromisoformat(start_timestamp.replace("Z", "+00:00"))
-    return dt.strftime("hh:mm")
+    return dt.strftime("%Y-%m-%d")
 
 
 def create_response_body_from_toggl_taks(results):
@@ -73,16 +87,25 @@ def create_response_body_from_toggl_taks(results):
         description = entry.get("description", "")
         duration_seconds = entry.get("duration", 0)
         start = entry.get("start")
-        project_id = map_functionality_from_enum(entry.get("project_id", ""))
+
+        # 1. Skip running or invalid entries
+        if duration_seconds < 0 or not start:
+            continue
+
+        date = extract_date(start)
+        if not date:
+            continue
 
         payload = Apiparameters(
-            empid=settings.emp_id,
-            date=extract_date(start),
-            tasktype=detect_task_type(description),
-            functionality=project_id,
+            empid=int(settings.emp_id),
+            date=date,
+            tasktype=detect_task_type(description)
+            or Tasktype.Development_Maintanace.value,
+            functionality=map_functionality_from_enum(entry.get("project_id"))
+            or "Order entry",
             task=description,
-            timespent=to_hhmm(duration_seconds),
-            projectUID=settings.project_id,
+            timespent=str(to_decimal_hours(duration_seconds)),
+            projectUID=int(settings.project_id),
         )
 
         response_list.append(payload)
@@ -94,8 +117,8 @@ def create_response_body_from_toggl_taks(results):
 class Apiparameters:
     empid: int = 0
     date: str = ""
-    tasktype: int = ""
+    tasktype: int = 0
     functionality: str = ""
     task: str = ""
     timespent: str = ""
-    projectUID: int = ""
+    projectUID: int = 0
