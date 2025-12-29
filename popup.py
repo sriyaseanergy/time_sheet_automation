@@ -121,6 +121,47 @@ def show_edit_popup(entries):
     )
     table_container.pack(fill=tk.BOTH, expand=True)
 
+    # Check if entries is empty
+    if not entries:
+        # Show message for empty entries
+        empty_label = tk.Label(
+            table_container,
+            text="No entries to display",
+            font=("Segoe UI", 14),
+            bg="#ffffff",
+            fg=TEXT_SECONDARY,
+        )
+        empty_label.pack(expand=True)
+        
+        # Footer with buttons
+        footer_frame = tk.Frame(root, bg=BG_COLOR, height=80)
+        footer_frame.pack(fill=tk.X, padx=30, pady=(0, 20))
+        footer_frame.pack_propagate(False)
+        
+        btn_container = tk.Frame(footer_frame, bg=BG_COLOR)
+        btn_container.pack(side=tk.RIGHT)
+        
+        def on_close():
+            root.destroy()
+        
+        close_btn = tk.Button(
+            btn_container,
+            text="Close",
+            command=on_close,
+            bg=PRIMARY_COLOR,
+            fg="#ffffff",
+            font=("Segoe UI", 10, "bold"),
+            relief="flat",
+            borderwidth=0,
+            cursor="hand2",
+            padx=30,
+            pady=10,
+        )
+        close_btn.pack(side=tk.LEFT)
+        
+        root.mainloop()
+        return None
+
     # Get fields from sample entry
     sample = entries[0]
     fields = list(vars(sample).keys())

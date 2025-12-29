@@ -14,8 +14,8 @@ print(yesterday)
 def fetch_toggl_tasks(api_token=API_TOKEN):
     url = "https://api.track.toggl.com/api/v9/me/time_entries"
     params = {
-        "start_date": "2025-12-17",
-        "end_date": "2025-12-18",
+        "start_date": "2025-12-12",
+        "end_date": "2025-12-13",
     }
 
     resp = requests.get(
@@ -104,7 +104,7 @@ def create_response_body_from_toggl_taks(results):
             functionality=map_functionality_from_enum(entry.get("project_id"))
             or "Order entry",
             task=description,
-            timespent=str(to_decimal_hours(duration_seconds)),
+            timespent=to_hhmm(duration_seconds),
             projectUID=int(settings.project_id),
         )
 
