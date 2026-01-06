@@ -14,8 +14,8 @@ print(yesterday)
 def fetch_toggl_tasks(api_token=API_TOKEN):
     url = "https://api.track.toggl.com/api/v9/me/time_entries"
     params = {
-        "start_date": "2025-12-12",
-        "end_date": "2025-12-13",
+        "start_date": "2026-01-06",
+        "end_date": "2026-01-07",
     }
 
     resp = requests.get(

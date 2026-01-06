@@ -1,5 +1,6 @@
 import tkinter as tk
 from tkinter import ttk
+from copy import deepcopy
 
 
 def show_edit_popup(entries):
@@ -284,13 +285,33 @@ def show_edit_popup(entries):
 
     def on_ok():
         for i, item in enumerate(tree.get_children()):
+            # Get the current values from the tree (includes any edits made)
             values = tree.item(item)["values"]
-            entry = entries[i]
-
+            
+            # Create a deep copy of the original entry to avoid modifying it
+            original_entry = entries[i]
+            edited_entry = deepcopy(original_entry)
+            
+            # Update the copied entry with values from the tree
+            # Always use tree values to ensure edits are captured
             for idx, f in enumerate(fields):
-                setattr(entry, f, values[idx])
-
-            edited_entries.append(entry)
+                tree_value = values[idx]
+                
+                # Convert to appropriate type based on field
+                if f in ['empid', 'tasktype', 'projectUID']:
+                    # Integer fields
+                    try:
+                        # Convert to int, defaulting to 0 if empty/None
+                        setattr(edited_entry, f, int(tree_value) if tree_value and str(tree_value).strip() else 0)
+                    except (ValueError, TypeError):
+                        # If conversion fails, keep original value
+                        setattr(edited_entry, f, getattr(original_entry, f))
+                else:
+                    # String fields (task, functionality, date, timespent)
+                    # Always use tree value, even if empty string (to capture edits)
+                    setattr(edited_entry, f, str(tree_value) if tree_value is not None else "")
+            
+            edited_entries.append(edited_entry)
 
         root.destroy()
 
