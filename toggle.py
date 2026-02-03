@@ -7,17 +7,23 @@ from paraphrase import paraphrase_text
 
 API_TOKEN = settings.toggle_api
 
-date = datetime.now()
-yesterday = date - timedelta(days=1)
-print(yesterday)
-
 
 def fetch_toggl_tasks(api_token=API_TOKEN):
+    # Calculate yesterday and today dynamically
+    today = datetime.now()
+    yesterday = today - timedelta(days=1)
+    
+    # Format dates as YYYY-MM-DD strings
+    start_date = yesterday.strftime("%Y-%m-%d")
+    end_date = today.strftime("%Y-%m-%d")
+    
     url = "https://api.track.toggl.com/api/v9/me/time_entries"
     params = {
-        "start_date": "2026-01-19",
-        "end_date": "2026-01-20",
+        "start_date": start_date,
+        "end_date": end_date,
     }
+    
+    print(f"Fetching Toggl entries from {start_date} to {end_date}")
 
     resp = requests.get(
         url,
