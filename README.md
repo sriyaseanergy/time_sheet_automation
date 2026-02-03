@@ -12,6 +12,7 @@ A Python application that automates the process of syncing time entries from Tog
 
 ## Requirements
 
+
 - Python 3.11 or higher
 - Toggl API token
 - Timesheet API endpoint
