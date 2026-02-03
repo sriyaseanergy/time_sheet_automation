@@ -3,6 +3,7 @@ from config import settings
 from datetime import datetime, timedelta
 from dataclasses import dataclass
 from constants import Tasktype, Functionality
+from paraphrase import paraphrase_text
 
 API_TOKEN = settings.toggle_api
 
@@ -14,8 +15,8 @@ print(yesterday)
 def fetch_toggl_tasks(api_token=API_TOKEN):
     url = "https://api.track.toggl.com/api/v9/me/time_entries"
     params = {
-        "start_date": "2026-01-06",
-        "end_date": "2026-01-07",
+        "start_date": "2026-01-19",
+        "end_date": "2026-01-20",
     }
 
     resp = requests.get(
@@ -83,7 +84,11 @@ def extract_date(start_timestamp: str) -> str:
 def create_response_body_from_toggl_taks(results):
     response_list = []
 
-    for entry in results:
+    # Reverse the results to ensure first entry (oldest) is processed first
+    # Toggl API typically returns entries in reverse chronological order (newest first)
+    reversed_results = list(reversed(results))
+
+    for entry in reversed_results:
         description = entry.get("description", "")
         duration_seconds = entry.get("duration", 0)
         start = entry.get("start")
@@ -96,6 +101,20 @@ def create_response_body_from_toggl_taks(results):
         if not date:
             continue
 
+        # Paraphrase the task description if Google API is configured
+        paraphrased_task = description
+        if settings.google_api_key and settings.google_model and description:
+            try:
+                paraphrased_task = paraphrase_text(
+                    api_key=settings.google_api_key,
+                    text=description,
+                    model=settings.google_model
+                )
+            except Exception as e:
+                # If paraphrasing fails, use original description
+                print(f"Paraphrasing failed for task '{description}': {e}")
+                paraphrased_task = description
+
         payload = Apiparameters(
             empid=int(settings.emp_id),
             date=date,
@@ -103,7 +122,7 @@ def create_response_body_from_toggl_taks(results):
             or Tasktype.Development_Maintanace.value,
             functionality=map_functionality_from_enum(entry.get("project_id"))
             or "Order entry",
-            task=description,
+            task=paraphrased_task,
             timespent=to_hhmm(duration_seconds),
             projectUID=int(settings.project_id),
         )
